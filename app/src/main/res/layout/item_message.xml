@@ -6,6 +6,7 @@
     android:layout_height="wrap_content"
     android:padding="8dp">
 
+    <!-- Nome do Usuário -->
     <TextView
         android:id="@+id/tv_username"
         style="@style/TextAppearance.AppCompat.Small"
@@ -16,6 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Mathias Berwig" />
 
+    <!-- Timestamp da Mensagem -->
     <TextView
         android:id="@+id/tv_timestamp"
         style="@style/Base.TextAppearance.AppCompat.Small"
@@ -26,6 +28,7 @@
         app:layout_constraintTop_toTopOf="@+id/tv_username"
         tools:text="18:51" />
 
+    <!-- Mensagem -->
     <TextView
         android:id="@+id/tv_message"
         android:layout_width="wrap_content"

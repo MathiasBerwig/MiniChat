@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context="io.github.mathiasberwig.minichat.presentation.MainActivity">
 
+    <!-- Lista de mensagens -->
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list_messages"
         android:layout_width="0dp"
@@ -18,6 +19,7 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:listitem="@layout/item_message" />
 
+    <!-- Botão Enviar -->
     <ImageButton
         android:id="@+id/btn_send"
         android:layout_width="wrap_content"
@@ -30,6 +32,7 @@
         app:layout_constraintTop_toBottomOf="@id/list_messages"
         tools:ignore="ContentDescription" />
 
+    <!-- Digitar mensagem -->
     <EditText
         android:id="@+id/input_message"
         android:layout_width="0dp"
