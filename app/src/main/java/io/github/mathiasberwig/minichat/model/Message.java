@@ -14,6 +14,12 @@ public class Message {
     public Message() {
     }
 
+    public Message(String text, String name, String photoUrl) {
+        this.text = text;
+        this.name = name;
+        this.photoUrl = photoUrl;
+    }
+
     public String getId() {
         return id;
     }

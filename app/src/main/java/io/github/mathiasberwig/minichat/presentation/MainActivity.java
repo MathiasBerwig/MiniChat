@@ -1,21 +1,23 @@
 package io.github.mathiasberwig.minichat.presentation;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.TextWatcher;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -29,15 +31,16 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import io.github.mathiasberwig.minichat.R;
+import io.github.mathiasberwig.minichat.model.Message;
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.OnConnectionFailedListener,
-        FirebaseAuth.AuthStateListener {
+        GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 140;
 
     // Request Codes
     private static final int RC_SIGN_IN = 9001;
@@ -49,6 +52,9 @@ public class MainActivity extends AppCompatActivity implements
     // Google
     private GoogleApiClient googleApiClient;
 
+    // UI Components
+    private ImageButton btnSend;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,11 +63,6 @@ public class MainActivity extends AppCompatActivity implements
         // Inicializa a instância do Firebase
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
-
-        if (firebaseUser == null) {
-            // Usuário não fez login, então inicia o SDK do Google
-            signIn();
-        }
 
         // Configura o módulo de login do Google
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -75,7 +76,16 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        configureUiComponents();
+        if (firebaseUser == null) {
+            // Usuário não fez login, então inicia o SDK do Google
+            signIn();
+        } else {
+            // Configura a lista caso o usuário já esteja logado. Do contrário, a lista é configurada
+            // após o login
+            setupList();
+        }
+
+        setupInputAndSend();
     }
 
     @Override
@@ -86,18 +96,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        firebaseAuth.addAuthStateListener(this);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.sign_in_menu: { // Entrar
-                signIn();
-                return true;
-            }
             case R.id.sign_out_menu: { // Sair
                 signOut();
                 return true;
@@ -124,38 +124,92 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        firebaseAuth.removeAuthStateListener(this);
+    /**
+     * Configura a lista de mensagens.
+     */
+    private void setupList() {
+        final RecyclerView list = findViewById(R.id.list_messages);
+
+        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        final FirebaseRecyclerAdapter adapter = new FirebaseRecyclerAdapter<Message, MessageViewHolder>(
+                Message.class,
+                R.layout.item_message,
+                MessageViewHolder.class,
+                databaseReference) {
+
+            @Override
+            protected void populateViewHolder(final MessageViewHolder viewHolder,
+                                              Message message, int position) {
+
+                // Atualiza os dados da mensagem
+                viewHolder.message.setText(message.getText());
+                viewHolder.username.setText(message.getName());
+
+                if (message.getPhotoUrl() == null) {
+                    // Imagem padrão
+                    viewHolder.userPhoto.setImageDrawable(
+                            ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_account_circle_black_36dp)
+                    );
+                } else {
+                    // Carrega a foto do usuário
+                    Glide.with(MainActivity.this)
+                            .load(message.getPhotoUrl())
+                            .into(viewHolder.userPhoto);
+                }
+            }
+        };
+
+        // Prepara o gerenciador de layout
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setStackFromEnd(true); // preenche a lista partindo de baixo
+
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int messageCount = adapter.getItemCount();
+                int lastVisiblePosition = linearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // Se o RecyclerView está sendo carregado pela primeira vez ou o usuário está no
+                // final da lista, faz  scroll até o último item para mostrar a nova mensagem
+                if (lastVisiblePosition == -1 ||
+                        (positionStart >= (messageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                    list.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        list.setLayoutManager(linearLayoutManager);
+        list.setAdapter(adapter);
     }
 
     /**
-     * Configura os componentes da activity:
-     * - EditText da mensagem
-     * - Button enviar mensagem
+     * Configura o botão enviar e o edit text da mensagem.
      */
-    private void configureUiComponents() {
-        final ImageButton btnSend = (ImageButton) findViewById(R.id.btn_send);
-        final EditText messageEditText = (EditText) findViewById(R.id.input_message);
+    private void setupInputAndSend() {
+        btnSend = findViewById(R.id.btn_send);
+        final EditText edtMessage = findViewById(R.id.input_message);
 
-        // Define o tamanho máximo do campo de mensagem
-        messageEditText.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)
-        });
-        messageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
+        // Desabilita o botão enviar caso o usuário não tenha sido autenticado
+        btnSend.setEnabled(firebaseUser != null);
 
+        // Define a ação do botão Enviar
+        btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                final boolean enabled = charSequence.toString().trim().length() > 0;
-                btnSend.setEnabled(enabled);
-            }
+            public void onClick(View view) {
+                // Obtém as informações da mensagem e do usuário
+                final String text = edtMessage.getText().toString();
+                final String username = firebaseUser.getDisplayName();
+                final Uri photoUri = firebaseUser.getPhotoUrl();
+                final String userPhoto = photoUri == null ? null : photoUri.toString();
 
-            @Override
-            public void afterTextChanged(Editable editable) {
+                // Cria uma nova mensagem para enviar ao Firebase
+                FirebaseDatabase.getInstance()
+                        .getReference()
+                        .push()
+                        .setValue(new Message(text, username, userPhoto));
+
+                // Remove a mensagem enviada
+                edtMessage.setText("");
             }
         });
     }
@@ -163,11 +217,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
-    }
-
-    @Override
-    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-
     }
 
     /**
@@ -189,8 +238,10 @@ public class MainActivity extends AppCompatActivity implements
         if (firebaseUser == null) {
             Toast.makeText(this, R.string.error_not_signed_in, Toast.LENGTH_SHORT).show();
         } else {
-            FirebaseAuth.getInstance().signOut();
+            firebaseAuth.signOut();
+            Auth.GoogleSignInApi.signOut(googleApiClient);
             firebaseUser = null;
+            finish();
         }
     }
 
@@ -218,6 +269,12 @@ public class MainActivity extends AppCompatActivity implements
                                         R.string.welcome_message,
                                         firebaseUser.getDisplayName()
                                 );
+
+                                // Configura a lista de mensagens
+                                setupList();
+
+                                // Habilita o botão enviar mensagem
+                                btnSend.setEnabled(true);
 
                                 Toast.makeText(MainActivity.this, welcomeMessage, Toast.LENGTH_SHORT)
                                         .show();

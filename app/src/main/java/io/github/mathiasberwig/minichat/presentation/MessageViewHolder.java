@@ -18,8 +18,8 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
 
     public MessageViewHolder(View v) {
         super(v);
-        message = (TextView) itemView.findViewById(R.id.tv_message);
-        username = (TextView) itemView.findViewById(R.id.tv_username);
-        userPhoto = (CircleImageView) itemView.findViewById(R.id.img_user);
+        message = itemView.findViewById(R.id.tv_message);
+        username = itemView.findViewById(R.id.tv_username);
+        userPhoto = itemView.findViewById(R.id.img_user);
     }
 }

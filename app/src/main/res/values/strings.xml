@@ -2,7 +2,6 @@
     <string name="app_name">MiniChat</string>
 
     <!-- Ações -->
-    <string name="action_sign_in">Entrar</string>
     <string name="action_sign_out">Sair</string>
 
     <!-- Erros -->
