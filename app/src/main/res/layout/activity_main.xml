@@ -10,13 +10,14 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list_messages"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingEnd="8dp"
         android:paddingStart="8dp"
         app:layout_constraintBottom_toTopOf="@+id/input_message"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/item_message" />
 
     <!-- Botão Enviar -->
