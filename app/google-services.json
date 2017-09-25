@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "115083957724",
+    "firebase_url": "https://minicurso-minichat.firebaseio.com",
+    "project_id": "minicurso-minichat",
+    "storage_bucket": "minicurso-minichat.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115083957724:android:092af1905a35ba66",
+        "android_client_info": {
+          "package_name": "io.github.mathiasberwig.minichat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "115083957724-h9f9p063piedklmu2uhg2l96er8qcsp8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.github.mathiasberwig.minichat",
+            "certificate_hash": "ca3547ed5721db501f2d1fb3f5ca52d8fb222420"
+          }
+        },
+        {
+          "client_id": "115083957724-jauisbt8t5nuckvhmv0qqh7ifh4emh27.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtj0_j0TjgbeOuc2IkDGq3wl9o2MV3JS8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "115083957724-jauisbt8t5nuckvhmv0qqh7ifh4emh27.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
