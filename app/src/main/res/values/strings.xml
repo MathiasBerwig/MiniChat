@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">MiniChat</string>
+
+    <!-- Ações -->
+    <string name="action_sign_in">Entrar</string>
+    <string name="action_sign_out">Sair</string>
+
+    <!-- Erros -->
+    <string name="error_authentication_failed">Erro ao autenticar.</string>
+    <string name="welcome_message">Bem vindo, %s</string>
+    <string name="error_not_signed_in">Você já saiu.</string>
+    <string name="error_signed_in">Você já entrou.</string>
 </resources>
